@@ -1,0 +1,79 @@
+#无法获得锁
+ps aux | grep "apt-get"
+sudo kill ...
+或者
+sudo rm /var/cache/apt/archives/lock
+sudo rm /var/lib/dpkg/lock
+
+#Anaconda安装
+bash A...sh
+
+#pip安装
+sudo apt-get install python-pip python-dev
+
+#bazel安装
+sudo apt-get install openjdk-8-jdk
+(sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update && sudo apt-get install oracle-java8-installer)
+echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
+sudo apt-get update && sudo apt-get install bazel
+sudo apt-get upgrade bazel
+
+#cuda安装
+sudo sh cuda_....
+
+#配置cuda路径
+vim ~/.bashrc
+export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib64:/usr/local/cuda-8.0/extras/CUPTI/lib64:$LD_LIBRARY_PATH
+export CUDA_HOME=/usr/local/cuda-8.0
+export PATH=/usr/local/cuda-8.0/bin:$PATH
+source ~/.bashrc
+
+#解压cudnn文件并安装
+cp  cudnn-8.0-linux-x64-v5.1.solitairetheme8 cudnn-8.0-linux-x64-v5.1.tgz
+cd /usr/local
+sudo tar -xzvf ~/downloads/cudnn-.....tgz
+
+#安装GPU版
+export TF_BINARY_URL=http://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-1.0.0rc0-cp35-cp35m-linux_x86_64.whl
+pip install --upgrade $TF_BINARY_URL
+(出现版本出错,查看python版本是否对应)
+pip install --upgrade --ignore-installed setuptools  //如果出现setuptools问题，升级版本
+
+若是不兼容，进行源码编译
+wget http://github.com/tensorflow/tensorflow/archive/v1.0.0-rc0.tar.gz
+tar -xzvf v...
+
+#测试
+import tensorflow as tf
+hello=tf.constant('Hello, TensorFlow')
+sess=tf.Session()
+print(sess.run(hello))
+
+#升级
+pip install --upgrade tensorflow
+
+ubuntu tty模式下安装显卡驱动
+lspci -k | grep -A 2 -i "VGA"  //查看有哪些显卡
+sudo ubuntu-drivers devices    //查看可安装驱动
+sudo apt-get install nvidia-352   //安装驱动
+
+Python版本的切换
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 100
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 150
+或者查看Python然后输入对应序号进行切换
+sudo update-alternatives --config python
+
+出现：Intel MKL FATAL ERROR: Cannot load libmkl_avx2.so or libmkl_def.so
+conda install nomkl numpy scipy scikit-learn numexpr
+
+pip install easydict  //安装easydict
+
+module 'pandas' has no attribute 'computation'解决办法
+pip install --upgrade pandas
+pip install --upgrade dask
+
+#建立软链接
+sudo rm -rf /usr/local/cuda
+sudo ln -s /usr/local/cuda-8.0/ /usr/local/cuda
