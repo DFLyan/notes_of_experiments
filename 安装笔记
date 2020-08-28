@@ -82,3 +82,11 @@ sudo ln -s /usr/local/cuda-8.0/ /usr/local/cuda
 cd /var/lib/dpkg
 sudo mv info info.bak
 sudo mkdir info
+
+#安装显卡驱动
+sudo add-apt-repository ppa:graphics-drivers/ppa
+sudo apt-get update
+sudo apt-get install nvidia-driver-440
+sudo reboot
+# 如果要安装系统的cuda
+apt install nvidia-cuda-toolkit
