@@ -90,3 +90,12 @@ sudo apt-get install nvidia-driver-440
 sudo reboot
 # 如果要安装系统的cuda
 apt install nvidia-cuda-toolkit
+
+### 服务器添加新用户
+adduser jenny --home /ssd/jenny
+sudo vim /etc/sudoers
+'''# User privilege specification
+root    ALL=(ALL:ALL) ALL
+jwchen  ALL=(ALL:ALL) ALL
+jenny   ALL=(ALL:ALL) ALL
+'''
