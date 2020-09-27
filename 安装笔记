@@ -99,3 +99,6 @@ root    ALL=(ALL:ALL) ALL
 jwchen  ALL=(ALL:ALL) ALL
 jenny   ALL=(ALL:ALL) ALL
 '''
+
+### watch -n 0.5 nvidia-smi cpu占用高
+nvidia-smi -pm 1
