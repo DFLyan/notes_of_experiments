@@ -102,3 +102,8 @@ jenny   ALL=(ALL:ALL) ALL
 
 ### watch -n 0.5 nvidia-smi cpu占用高
 nvidia-smi -pm 1
+
+
+### 105号机重启硬盘挂载掉线
+sudo fdisk -l   查看待挂载的硬盘设备
+sudo mount /dev/sda /ssd/   挂载到文件夹
