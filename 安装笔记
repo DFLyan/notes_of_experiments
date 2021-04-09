@@ -116,3 +116,6 @@ sudo vim /etc/netplan/01-netcfg.yaml
 ### 查看服务器端某文件夹
 python3 -m http.server 8080
 服务器地址：8080
+
+### pip超时
+pip --default-timeout=100 install  Pillow
