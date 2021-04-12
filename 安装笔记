@@ -119,3 +119,7 @@ python3 -m http.server 8080
 
 ### pip超时
 pip --default-timeout=100 install  Pillow
+
+### titanXP的pytorch配置
+直接安装torchvision 0.5.0，会自动安装1.4版本
+cuda版本9.0可以跑起来
