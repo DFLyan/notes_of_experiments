@@ -7,3 +7,8 @@
 ### 改名（通过ID重新创建一个新的镜像）
 docker images
 docker image tag ID newname
+
+### 外部ssh连接（主要思路为打开端口供外部ssh访问）
+docker run -t -P --expose 22 --name server 镜像名字
+docker ps (查看端口port）
+之后，可通过pycharm中的环境添加里，ssh选项，填写服务器的ip地址，即可访问镜像
