@@ -1,0 +1,9 @@
+### 每次都要sudo的解决办法
+1.创建docker组：sudo groupadd docker
+2.将当前用户加入docker组：sudo gpasswd -a ${USER} docker
+3.重启服务：sudo service docker restart
+4.刷新docker成员：newgrp - docker
+
+### 改名（通过ID重新创建一个新的镜像）
+docker images
+docker image tag ID newname
