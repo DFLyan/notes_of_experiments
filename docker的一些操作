@@ -22,3 +22,5 @@ docker run -t -P --expose 22 --name server 镜像名字
 docker ps (查看端口port）
 之后，可通过pycharm中的环境添加里，ssh选项，填写服务器的ip地址，即可访问镜像
 
+### 开始/关闭/删除所有容器
+docker start/stop/rm $(docker ps -a | awk '{ print $1}' | tail -n +2)
