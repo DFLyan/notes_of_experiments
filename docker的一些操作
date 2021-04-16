@@ -8,7 +8,17 @@
 docker images
 docker image tag ID newname
 
+### 停止
+docker stop ID
+
+### 查看端口
+netstat -aptn
+
+### 端口映射
+docker run -t -p 8080:80 nginx
+
 ### 外部ssh连接（主要思路为打开端口供外部ssh访问：镜像-->本地端口eg:0.0.0.0:2367-->连接外部的端口eg:22-->外部即可通过用户名@服务器ip进行访问）
 docker run -t -P --expose 22 --name server 镜像名字
 docker ps (查看端口port）
 之后，可通过pycharm中的环境添加里，ssh选项，填写服务器的ip地址，即可访问镜像
+
