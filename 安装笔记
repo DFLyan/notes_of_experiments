@@ -54,10 +54,6 @@ print(sess.run(hello))
 #升级
 pip install --upgrade tensorflow
 
-ubuntu tty模式下安装显卡驱动
-lspci -k | grep -A 2 -i "VGA"  //查看有哪些显卡
-sudo ubuntu-drivers devices    //查看可安装驱动
-sudo apt-get install nvidia-352   //安装驱动
 
 Python版本的切换
 sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 100
@@ -83,14 +79,6 @@ cd /var/lib/dpkg
 sudo mv info info.bak
 sudo mkdir info
 
-#安装显卡驱动
-sudo add-apt-repository ppa:graphics-drivers/ppa
-sudo apt-get update
-sudo apt-get install nvidia-driver-440
-sudo reboot
-# 如果要安装系统的cuda
-apt install nvidia-cuda-toolkit
-
 ### 服务器添加新用户
 adduser jenny --home /ssd/jenny
 sudo vim /etc/sudoers
@@ -99,10 +87,6 @@ root    ALL=(ALL:ALL) ALL
 jwchen  ALL=(ALL:ALL) ALL
 jenny   ALL=(ALL:ALL) ALL
 '''
-
-### cpu和gpu使用率都过低--> watch -n 0.5 nvidia-smi cpu占用高
-sudo nvidia-smi -pm 1  '''启用gpu持久模式'''
-
 
 ### 105号机重启硬盘挂载掉线
 sudo fdisk -l   查看待挂载的硬盘设备
