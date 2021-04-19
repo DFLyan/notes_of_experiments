@@ -1,0 +1,12 @@
+### 安装
+sudo apt-get purge nvidia*（卸载原来的）
+sudo add-apt-repository ppa:graphics-drivers
+sudo apt-get update
+ubuntu-drivers devices（查看系统推荐）
+sudo ubuntu-drivers autoinstall(自动安装系统推荐的）
+sudo reboot
+
+### 如果安装了显卡驱动，还是没法smi
+sudo apt install dkms
+sudo dkms install -m nvidia -v 版本号（ls /usr/src | grep nvidia）
+可能会缺少内核，按照提示，apt安装内核即可继续
