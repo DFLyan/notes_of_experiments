@@ -96,6 +96,7 @@ sudo mount /dev/sda /ssd/   挂载到文件夹
 sudo vim /etc/netplan/01-netcfg.yaml
 或者 /etc/network/inter...
 10.20.221.253
+10.20.232.47
 
 ### 查看服务器端某文件夹
 python3 -m http.server 8080
