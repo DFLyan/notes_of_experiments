@@ -1,4 +1,4 @@
-tar -zxvf openssl-1.1.0k.tar.gz
+### tar -zxvf openssl-1.1.0k.tar.gz
 
 ### 编译安装
 cd openssl-1.1.0k
