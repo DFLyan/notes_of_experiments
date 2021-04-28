@@ -12,5 +12,5 @@ sudo rm /usr/bin/openssl
 sudo ln -s /usr/local/bin/openssl /usr/bin/openssl
 
 ### 如果报错
-sudo cp libssl.so.1.1 /lib/x86_64-linux-gnu
+sudo cp libssl.so.1.1 /lib/x86_64-linux-gnu<br>
 sudo cp libcrypto.so.1.1 /lib/x86_64-linux-gnu　　
