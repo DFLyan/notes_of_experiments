@@ -33,6 +33,10 @@ source ~/.bashrc
 #解压cudnn文件并安装
 cp  cudnn-8.0-linux-x64-v5.1.solitairetheme8 cudnn-8.0-linux-x64-v5.1.tgz
 cd /usr/local
+
+#查看进程及对应文件夹
+sudo cd /proc/pid
+sudo ls -l exe
 sudo tar -xzvf ~/downloads/cudnn-.....tgz
 
 #安装GPU版
