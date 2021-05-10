@@ -92,6 +92,10 @@ jwchen  ALL=(ALL:ALL) ALL
 jenny   ALL=(ALL:ALL) ALL
 '''
 
+### 删除用户
+sudo userdel -r username（如果没有-r，只会删除用户，不会删除对应的用户文件夹）
+
+
 ### 105号机重启硬盘挂载掉线
 sudo fdisk -l   查看待挂载的硬盘设备
 sudo mount /dev/sda /ssd/   挂载到文件夹
@@ -123,3 +127,7 @@ sudo chown userA:userA -R /home/userA
 ### 查看id相对应的文件及目录
 sudo cd /proc/3093
 sudo ls -l exe
+
+### 禁止root远程登录
+/etc/ssh/sshd_config中permitrootlogin改为no
+service ssh restart
