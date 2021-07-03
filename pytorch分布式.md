@@ -31,7 +31,7 @@
         [X] Gloo
 
 ## package-net所需pip
-yacs, opencv-python, matplotlib, termcolor, tqdm, wandb, pandas, boto3, pyquaternion
+    pip install -i https://pypi.tuna.tsinghua.edu.cn/simple yacs opencv-python matplotlib termcolor tqdm wandb pandas boto3 pyquaternion
 
 # 第一次安装时的参考
 ### 如果是1.5版本，可参考[官方给出的版本](https://github.com/horovod/horovod/blob/master/docs/conda.rst)
