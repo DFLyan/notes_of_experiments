@@ -1,5 +1,5 @@
 # 安装pytorch1.4版本的，在ubuntu16.04下，为系统可安装驱动下支持的最高版本，直接安装torchvision==0.5.0即可
-## 傻瓜式步骤: 
+## 步骤（cuda版本可随意选择版本，只要pytorch和tensorflow运行时不报错）: 
 
     conda create -n hov python==3.6.9
     conda install cudatoolkit==9.0
@@ -13,7 +13,7 @@
 ## 检查是否安装成功
 ```horovodrun --check-build```
 
-应该会出现： 
+应该会出现（如果NCCL那一栏没有打勾，可以先运行下程序看看，能不能分布式跑）： 
 
     Horovod v0.19.4:
     Available Frameworks:
@@ -31,7 +31,7 @@
         [X] Gloo
 
 ## package-net所需pip
-    pip install -i https://pypi.tuna.tsinghua.edu.cn/simple yacs opencv-python matplotlib termcolor tqdm wandb pandas boto3 pyquaternion
+    pip install -i https://pypi.tuna.tsinghua.edu.cn/simple yacs opencv-python matplotlib termcolor tqdm wandb pandas boto3 pyquaternion mmcv
 
 # 第一次安装时的参考
 ### 如果是1.5版本，可参考[官方给出的版本](https://github.com/horovod/horovod/blob/master/docs/conda.rst)
