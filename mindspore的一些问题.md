@@ -1,4 +1,5 @@
 ## 单节点多gpu
+官方给出教程为pytest，使用时，将pytest改为python运行，去除“-s”和“-v”
 ```
   #!/bin/bash
 
