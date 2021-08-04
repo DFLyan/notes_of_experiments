@@ -29,3 +29,9 @@
   -x, --exitfirst, exit instantly on first error or failed test
   -h 帮助
 ```
+
+对比教程和示例，代码中还需加入：
+```
+from mindspore.context import ParallelMode
+context.set_auto_parallel_context(parallel_mode=ParallelMode.AUTO_PARALLEL, gradients_mean=True)
+```
