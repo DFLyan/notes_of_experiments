@@ -24,3 +24,6 @@ docker挂载data文件夹处理数据
 ```
 docker run --shm-size=32g -it -v /data1/jwchen/mmdetection3d/data:/mmdetection3d/data mmdetection3d
 ```
+
+### 训练nuscenses-mini时，默认的version是完整数据集，如果使用mini会在测试bbox报错
+暂时的方法是mmdet3d/datasets/nuscenses_mono_datasets里的类初始化直接修改version为v1.0-mini，在83行
