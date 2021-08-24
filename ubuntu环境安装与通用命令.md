@@ -177,3 +177,9 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 80 --slave /u
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100(100为优先级）
 sudo update-alternatives --config gcc（手动选择）
 ```
+
+### 关闭客户端不打断进程
+```
+nohup ... >>logname.out & (之前有一次出现过关闭还停止，但忘了是什么情况了，最后还是解决了，如果遇到以后再补充)
+tail -f logname.out(查看)
+```
