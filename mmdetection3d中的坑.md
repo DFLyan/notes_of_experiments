@@ -27,3 +27,21 @@ docker run --shm-size=32g -it -v /data1/jwchen/mmdetection3d/data:/mmdetection3d
 
 ### 训练nuscenses-mini时，默认的version是完整数据集，如果使用mini会在测试bbox报错
 暂时的方法是mmdet3d/datasets/nuscenses_mono_datasets里的类初始化直接修改version为v1.0-mini，在83行
+
+
+## cofig的一些说明
+### 输出所有参数
+```
+python tools/misc/print_config.py config_file
+```
+
+### model
+type索引到类，然后后面的参数代表着类的初始化参数，传入类中
+自己写可能需要重新编译
+
+### data
+类似于pytorch中的dataloader
+pipline相当于transform，数据处理
+
+### schedule
+大部分设定类似前两个
