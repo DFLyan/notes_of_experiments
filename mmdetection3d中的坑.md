@@ -45,4 +45,5 @@ pipline相当于transform，数据处理
 
 ### schedule
 大部分设定类似前两个\
-load_from是仅加载参数，resume_from除参数之外还包含了epoch等
+load_from是仅加载参数，resume_from除参数之外还包含了epoch等\
+workflow中，修改数字只会修改loss的显示，而精确度等评价指标还是会每个epoch打印一次
