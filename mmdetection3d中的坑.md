@@ -47,3 +47,6 @@ pipline相当于transform，数据处理
 大部分设定类似前两个\
 load_from是仅加载参数，resume_from除参数之外还包含了epoch等\
 workflow中，修改数字只会修改loss的显示，而精确度等评价指标还是会每个epoch打印一次
+
+### analysis
+里面有很多分析结果的文件，其他的工具可能在tools下的别的问价内，比如可视化
