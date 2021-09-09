@@ -50,3 +50,20 @@ workflow中，修改数字只会修改loss的显示，而精确度等评价指�
 
 ### analysis
 里面有很多分析结果的文件，其他的工具可能在tools下的别的问价内，比如可视化
+
+## 来自大佬的咨询
+### 多视角数据处理
+loading.py第46行
+
+### 数据传输
+所有的数据都是以一个字典的形式进行传送的：results\
+
+### pipeline
+1、pipeline的最后会有一个collect3D，根据collect层里面的给的字段来拿这个字典里面的最终结果。\
+2、collect返回的是一个datacontainer，是一个类似字典的数据容器类：pipeline/formating/DC\
+3、使用装饰器后，装饰器会首先把这个函数注册到一个内存空间里，不管这个函数会不会被调用，就像一个全局字典一样。
+会不会被用到，我不管，但是记录在了字典里 谁要用只要根据函数名字索引一下就行。\
+4、build_from_cfg就是把pipeline的东西，从上到下，
+按着顺序去这个全局字典里搜一遍，组成一个可以挨个调用的pipeline对象。
+就跟torchvision.transforms.compose一样。
+
