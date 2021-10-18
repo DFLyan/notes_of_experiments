@@ -1,5 +1,18 @@
-### 安装
+## 安装
+### gcc和g++问题
 根据官方的步骤安装，gcc和g++如果版本过高，无法编译。切换成5版本可以编译通过。
+
+### Unsupported gpu architecture 'compute_75'
+编译的时候会去寻找系统下的cuda
+```
+sudo vim ~/.bashrc
+添加
+  export PATH="/usr/local/cuda/bin:$PATH"
+  export LD_LIBRARY_PATH="/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64:$LD_LIBRARY_PATH"
+  export CUDA_HOME="/usr/local/cuda"
+sudo source ~/.bashrc
+conda activate open-mmlab
+```
 
 ## nuscenses数据集
 ### 创建
