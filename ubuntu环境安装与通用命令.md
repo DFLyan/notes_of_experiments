@@ -174,8 +174,8 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 80 --slave /u
 （通过以上建立gcc和g++之间的关系，然后通过下面设置好gcc的优先级之后，只要切换gcc，g++也能跟着切换）
 或者
 
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100(100为优先级）
-sudo update-alternatives --config gcc（手动选择）
+sudo update-alternatives --install /usr/bin/gcc(g++) gcc(g++) /usr/bin/gcc-5 100(100为优先级）
+sudo update-alternatives --config gcc(g++)（手动选择）
 ```
 
 ### 关闭客户端不打断进程
