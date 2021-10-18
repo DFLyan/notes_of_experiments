@@ -11,7 +11,7 @@
 ```
 numpy.ndarray size changed, may indicate binary incompatibility. Expected 88 from C header, got 80 from PyObject
 ```
-发现是导入pycocotools的时候报的错，需要重新安装pycocotools，原因是在自动安装的时候，会自己安装1.20的numpy，所以需要卸载了重新编译
+发现是导入pycocotools的时候报的错，需要重新安装pycocotools，原因是在自动安装的时候(也可能是安装cudnn的时候被升级了），会自己安装1.20的numpy，所以需要卸载了重新编译
 ```
 pip uninstall pycocotools mmpycocotools
 pip install mmpycocotools
