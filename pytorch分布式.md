@@ -1,6 +1,10 @@
 ## ubuntu 18.04可参考：
 ![image](https://user-images.githubusercontent.com/27199157/124752232-2d993c80-df5a-11eb-8c63-ec80630566f1.png)
 
+## 安装1.8.0(可创建3.8版本的python）
+```
+pip install torch==1.8.0+cu101 torchvision==0.9.0+cu101 torchaudio==0.8.0 -f https://download.pytorch.org/whl/torch_stable.html
+```
 
 # 安装pytorch1.4版本的，在ubuntu16.04下，为系统可安装驱动下支持的最高版本，直接安装torchvision==0.5.0即可
 ## 步骤（cuda版本可随意选择版本，只要pytorch和tensorflow运行时不报错）: 
