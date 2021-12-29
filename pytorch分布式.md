@@ -67,3 +67,8 @@ HOROVOD_GPU_OPERATIONS=NCCL pip install --no-cache-dir horovod==0.19.*
 ```$ horovodrun -np 4 -H localhost:4 python train.py ```
 ## 多机多卡
 ```$ horovodrun -np 16 -H server1:4,server2:4,server3:4,server4:4 python train.py ``` 
+
+# 一些代码设置
+## GPU使用哪些卡
+logging.getLogger().setLevel(logging.INFO)
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
