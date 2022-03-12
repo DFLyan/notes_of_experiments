@@ -183,3 +183,6 @@ sudo update-alternatives --config gcc(g++)（手动选择）
 nohup ... >>logname.out & (之前有一次出现过关闭还停止，但忘了是什么情况了，最后还是解决了，如果遇到以后再补充)
 tail -f logname.out(查看)
 ```
+
+### apt源
+cd /etc/apt/sources.list.d/ （进入后ls，查看，.list.bak是备份）
