@@ -186,3 +186,7 @@ tail -f logname.out(查看)
 
 ### apt源
 cd /etc/apt/sources.list.d/ （进入后ls，查看，.list.bak是备份）
+
+### 显卡占用显存但是没有pid
+fuser -v /dev/nvidia0
+(access下，F...m的，大概率是卡死的进程，kill掉即可)
