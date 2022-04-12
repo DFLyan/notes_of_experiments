@@ -187,3 +187,8 @@ tail -f logname.out(查看)
 ### apt源
 cd /etc/apt/sources.list.d/ （进入后ls，查看，.list.bak是备份）
 
+### 修改github的IP，能ping通
+（修改 /etc/hosts）
+sudo vim /etc/hosts
+(更新一下hosts)
+source /etc/hosts
