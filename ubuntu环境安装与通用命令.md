@@ -180,7 +180,7 @@ sudo update-alternatives --config gcc(g++)（手动选择）
 
 ### 关闭客户端不打断进程
 ```
-nohup -u ... >>logname.out & (之前有一次出现过关闭还停止，但忘了是什么情况了，最后还是解决了，如果遇到以后再补充)
+nohup python -u ....py >>logname.out & (之前有一次出现过关闭还停止，但忘了是什么情况了，最后还是解决了，如果遇到以后再补充)
 tail -f logname.out(查看)
 ```
 
