@@ -80,3 +80,51 @@ loading.py第46行
 按着顺序去这个全局字典里搜一遍，组成一个可以挨个调用的pipeline对象。
 就跟torchvision.transforms.compose一样。
 
+# 坐标系的表示（位于mmdet3d/core/bbox/structures/coord_3d_mode.py）
+```
+ r"""Enum of different ways to represent a box
+        and point cloud.
+
+    Coordinates in LiDAR:
+
+    .. code-block:: none
+
+                    up z
+                       ^   x front
+                       |  /
+                       | /
+        left y <------ 0
+
+    The relative coordinate of bottom center in a LiDAR box is (0.5, 0.5, 0),
+    and the yaw is around the z axis, thus the rotation axis=2.
+
+    Coordinates in camera:
+
+    .. code-block:: none
+
+                z front
+               /
+              /
+             0 ------> x right
+             |
+             |
+             v
+        down y
+
+    The relative coordinate of bottom center in a CAM box is [0.5, 1.0, 0.5],
+    and the yaw is around the y axis, thus the rotation axis=1.
+
+    Coordinates in Depth mode:
+
+    .. code-block:: none
+
+        up z
+           ^   y front
+           |  /
+           | /
+           0 ------> x right
+
+    The relative coordinate of bottom center in a DEPTH box is (0.5, 0.5, 0),
+    and the yaw is around the z axis, thus the rotation axis=2.
+    """
+```
