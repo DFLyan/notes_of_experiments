@@ -150,10 +150,20 @@ cuda版本9.0可以跑起来
 ### 缺少google module
 pip install protobuf
 
+## 修改用户根目录
+```
+vim /etc/passwd
+```
+修改对应用户的目录即可
+
 ### 修改用户根目录后出现/usr/bin/xauth: timeout in locking authority file /home/sam/.Xauthority,原因userA对/home/userA目录没有写权限 
 ```
 sudo chown userA:userA -R /home/userA
 通过这方式也可以使得用户对非根目录下的文件夹获取读写权限
+```
+### 修改用户根目录后登录后不直接是anaconda的base环境（不确定是机器原因还是别的，只有治标的方法）
+```
+source ~/.bashrc
 ```
 
 ### 查看id相对应的文件及目录
