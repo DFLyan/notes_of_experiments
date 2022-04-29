@@ -114,6 +114,9 @@ jwchen  ALL=(ALL:ALL) ALL
 jenny   ALL=(ALL:ALL) ALL
 ```
 
+### 如果用户有root权限，修改root账户的密码
+sudo passwd root
+
 ### 删除用户
 sudo userdel -r username（如果没有-r，只会删除用户，不会删除对应的用户文件夹）
 
