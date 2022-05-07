@@ -128,3 +128,10 @@ loading.py第46行
     and the yaw is around the z axis, thus the rotation axis=2.
     """
 ```
+
+### TypeError: can't pickle dict_keys objects
+```
+if __name__ == '__main__':
+    torch.multiprocessing.set_start_method('fork')  ###加这一行
+    main()
+```
