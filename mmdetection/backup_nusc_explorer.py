@@ -1,7 +1,6 @@
-
 from nuscenes.nuscenes import NuScenesExplorer, NuScenes
 
-import json
+import json, copy
 import math
 import os
 import os.path as osp
@@ -32,7 +31,7 @@ color_mapping = [
     np.array([4, 157, 217]) / 255.0,
     np.array([191, 4, 54]) / 255.0,
     np.array([0, 0, 0]) / 255.0,
-    np.array([224, 133, 250]) / 255.0, 
+    np.array([224, 133, 250]) / 255.0,
     np.array([32, 64, 40]) / 255.0,
     np.array([77, 115, 67]) / 255.0
 ]
@@ -41,14 +40,13 @@ print('Using color mapping', color_mapping)
 
 
 class NuScenesMars(NuScenes):
-    def __init__(self, 
+    def __init__(self,
                  version: str = 'v1.0-mini',
                  dataroot: str = '/data/sets/nuscenes',
                  verbose: bool = True,
                  map_resolution: float = 0.1):
         super().__init__(version, dataroot, verbose, map_resolution)
-        
-    
+
     def get_box(self, sample_annotation_token: str) -> Box:
         """
         Instantiates a Box class from a sample annotation record.
@@ -69,7 +67,7 @@ class NuScenesMars(NuScenes):
         Returns the data path as well as all annotations related to that sample_data.
         Note that the boxes are transformed into the current sensor's coordinate frame.
         :param sample_data_token: Sample_data token.
-        :param boxes: List of Boxes in global frame. 
+        :param boxes: List of Boxes in global frame.
         :param box_vis_level: If sample_data is an image, this sets required visibility for boxes.
         :param selected_anntokens: If provided only return the selected annotation.
         :param use_flat_vehicle_coordinates: Instead of the current sensor's coordinate frame, use ego frame which is
@@ -125,7 +123,7 @@ class NuScenesExplorerMars(NuScenesExplorer):
     def __init__(self, nusc: NuScenesMars):
         super().__init__(nusc)
         self.nusc = nusc
-    
+
     def render_sample_data(self,
                            sample_data_token: str,
                            with_anns: bool = True,
@@ -183,7 +181,7 @@ class NuScenesExplorerMars(NuScenesExplorer):
             if sensor_modality == 'lidar':
                 # Get aggregated lidar point cloud in lidar frame.
                 pc, times = LidarPointCloud.from_file_multisweep(self.nusc, sample_rec, chan, ref_chan,
-                                                                    nsweeps=nsweeps)
+                                                                 nsweeps=nsweeps)
                 velocities = None
             else:
                 # Get aggregated radar point cloud in reference frame.
@@ -199,7 +197,7 @@ class NuScenesExplorerMars(NuScenesExplorer):
                 velocities = np.dot(Quaternion(radar_cs_record['rotation']).rotation_matrix, velocities)
                 velocities = np.dot(Quaternion(ref_cs_record['rotation']).rotation_matrix.T, velocities)
                 velocities[2, :] = np.zeros(pc.points.shape[1])
-                
+
                 if show_radar_raw_velo:
                     # code for radar velocity without compensated starts below
                     velocities_ = pc.points[6:8, :]  # Not Compensated velocity
@@ -244,7 +242,7 @@ class NuScenesExplorerMars(NuScenesExplorer):
             points = view_points(pc.points[:3, :], viewpoint, normalize=False)
             dists = np.sqrt(np.sum(pc.points[:2, :] ** 2, axis=0))
             colors = np.minimum(1, dists / axes_limit / np.sqrt(2))
-                
+
             point_scale = 0.2 if sensor_modality == 'lidar' else 3.0
             scatter = ax.scatter(points[0, :], points[1, :], c=colors, s=point_scale)
 
@@ -255,7 +253,7 @@ class NuScenesExplorerMars(NuScenesExplorer):
                 deltas_vel = 6 * deltas_vel  # Arbitrary scaling
                 max_delta = 20
                 deltas_vel = np.clip(deltas_vel, -max_delta, max_delta)  # Arbitrary clipping
-                
+
                 if show_radar_raw_velo:
                     # code for radar velocity without compensated starts below
                     points_vel_ = view_points(pc.points[:3, :] + velocities_, viewpoint, normalize=False)
@@ -263,11 +261,11 @@ class NuScenesExplorerMars(NuScenesExplorer):
                     deltas_vel_ = 6 * deltas_vel_  # Arbitrary scaling
                     deltas_vel_ = np.clip(deltas_vel_, -max_delta, max_delta)  # Arbitrary clipping
                     # code for radar velocity without compensated end here
-                
+
                 colors_rgba = scatter.to_rgba(colors)
                 for i in range(points.shape[1]):
                     ax.arrow(points[0, i], points[1, i], deltas_vel[0, i], deltas_vel[1, i], color=colors_rgba[i])
-                    
+
                     if show_radar_raw_velo:
                         # code for radar velocity without compensated starts below
                         ax.arrow(points[0, i], points[1, i], deltas_vel_[0, i], deltas_vel_[1, i], color='pink')
@@ -283,13 +281,11 @@ class NuScenesExplorerMars(NuScenesExplorer):
             # Show boxes.
             if with_anns:
                 for box in boxes:
-                    
                     c = np.array(self.get_color(box.name)) / 255.0
                     box.render(ax, view=np.eye(4), colors=(c, c, c))
                     ax.arrow(
                         box.center[0], box.center[1], box.velocity[0], box.velocity[1],
                         color='cyan', width=0.25, )
-
 
             # Limit visible range.
             ax.set_xlim(-axes_limit, axes_limit)
@@ -316,12 +312,11 @@ class NuScenesExplorerMars(NuScenesExplorer):
                     velo = box.velocity[:, np.newaxis]
                     center_cam = view_points(center, camera_intrinsic, normalize=True)[:, 0]
                     center_add_velo_cam = view_points(center + velo, camera_intrinsic, normalize=True)[:, 0]
-                    
+
                     delta = center_add_velo_cam - center_cam
                     ax.arrow(
                         center_cam[0], center_cam[1], delta[0], delta[1],
                         color='cyan', width=3.0, )
-                    
 
             # Limit visible range.
             ax.set_xlim(0, data.size[0])
@@ -340,7 +335,7 @@ class NuScenesExplorerMars(NuScenesExplorer):
 
         if verbose:
             plt.show()
-        
+
     def render_sample_pred(self,
                            sample_data_token: str,
                            boxes: List[Box],
@@ -399,7 +394,7 @@ class NuScenesExplorerMars(NuScenesExplorer):
             if sensor_modality == 'lidar':
                 # Get aggregated lidar point cloud in lidar frame.
                 pc, times = LidarPointCloud.from_file_multisweep(self.nusc, sample_rec, chan, ref_chan,
-                                                                    nsweeps=nsweeps)
+                                                                 nsweeps=nsweeps)
                 velocities = None
             else:
                 # Get aggregated radar point cloud in reference frame.
@@ -415,7 +410,7 @@ class NuScenesExplorerMars(NuScenesExplorer):
                 velocities = np.dot(Quaternion(radar_cs_record['rotation']).rotation_matrix, velocities)
                 velocities = np.dot(Quaternion(ref_cs_record['rotation']).rotation_matrix.T, velocities)
                 velocities[2, :] = np.zeros(pc.points.shape[1])
-                
+
                 if show_radar_raw_velo:
                     # code for radar velocity without compensated starts below
                     velocities_ = pc.points[6:8, :]  # Not Compensated velocity
@@ -460,7 +455,7 @@ class NuScenesExplorerMars(NuScenesExplorer):
             points = view_points(pc.points[:3, :], viewpoint, normalize=False)
             dists = np.sqrt(np.sum(pc.points[:2, :] ** 2, axis=0))
             colors = np.minimum(1, dists / axes_limit / np.sqrt(2))
-                
+
             point_scale = 0.2 if sensor_modality == 'lidar' else 3.0
             scatter = ax.scatter(points[0, :], points[1, :], c=colors, s=point_scale)
 
@@ -471,7 +466,7 @@ class NuScenesExplorerMars(NuScenesExplorer):
                 deltas_vel = 6 * deltas_vel  # Arbitrary scaling
                 max_delta = 20
                 deltas_vel = np.clip(deltas_vel, -max_delta, max_delta)  # Arbitrary clipping
-                
+
                 if show_radar_raw_velo:
                     # code for radar velocity without compensated starts below
                     points_vel_ = view_points(pc.points[:3, :] + velocities_, viewpoint, normalize=False)
@@ -479,11 +474,11 @@ class NuScenesExplorerMars(NuScenesExplorer):
                     deltas_vel_ = 6 * deltas_vel_  # Arbitrary scaling
                     deltas_vel_ = np.clip(deltas_vel_, -max_delta, max_delta)  # Arbitrary clipping
                     # code for radar velocity without compensated end here
-                
+
                 colors_rgba = scatter.to_rgba(colors)
                 for i in range(points.shape[1]):
                     ax.arrow(points[0, i], points[1, i], deltas_vel[0, i], deltas_vel[1, i], color=colors_rgba[i])
-                    
+
                     if show_radar_raw_velo:
                         # code for radar velocity without compensated starts below
                         ax.arrow(points[0, i], points[1, i], deltas_vel_[0, i], deltas_vel_[1, i], color='pink')
@@ -500,21 +495,19 @@ class NuScenesExplorerMars(NuScenesExplorer):
             # Show boxes.
             if with_anns:
                 for i, box in enumerate(boxes):
-                    
 
                     c = np.array(self.get_color(box.name)) / 255.0
-                    if hasattr(box, 'track_ind'): # this is true
+                    if hasattr(box, 'track_ind'):  # this is true
                         tr_id = box.track_ind
-                        c = color_mapping[tr_id  % len(color_mapping)]
+                        c = color_mapping[tr_id % len(color_mapping)]
                     # print(c_box)
                     # print("original color", np.array(self.get_color(box.name)) / 255.0)
-                    box.render(ax, view=np.eye(4), colors=(c,c,c))
+                    box.render(ax, view=np.eye(4), colors=(c, c, c))
                     # print(c_box, np.array(self.get_color(box.name)) / 255.0)
                     ax.arrow(
                         box.center[0], box.center[1], box.velocity[0], box.velocity[1],
                         color=c, width=0.25, )
-                        # color='cyan', width=0.25, )
-
+                    # color='cyan', width=0.25, )
 
             # Limit visible range.
             ax.set_xlim(-axes_limit, axes_limit)
@@ -536,22 +529,21 @@ class NuScenesExplorerMars(NuScenesExplorer):
             if with_anns:
                 for box in boxes:
                     c = np.array(self.get_color(box.name)) / 255.0
-                    if hasattr(box, 'track_ind'): # this is true
+                    if hasattr(box, 'track_ind'):  # this is true
                         tr_id = box.track_ind
-                        c = color_mapping[tr_id  % len(color_mapping)]
+                        c = color_mapping[tr_id % len(color_mapping)]
                     #  if hasattr(box, 'track_ind'): # this is true
                     box.render(ax, view=camera_intrinsic, normalize=True, colors=(c, c, c))
                     center = box.center[:, np.newaxis]
                     velo = box.velocity[:, np.newaxis]
                     center_cam = view_points(center, camera_intrinsic, normalize=True)[:, 0]
                     center_add_velo_cam = view_points(center + velo, camera_intrinsic, normalize=True)[:, 0]
-                    
+
                     delta = center_add_velo_cam - center_cam
                     ax.arrow(
                         center_cam[0], center_cam[1], delta[0], delta[1],
                         color=c, width=3.0, )
-                        # color='cyan', width=3.0, )
-                    
+                    # color='cyan', width=3.0, )
 
             # Limit visible range.
             ax.set_xlim(0, data.size[0])
@@ -588,22 +580,22 @@ def load_results_json(results_path: str = None):
         'movable_object.trafficcone': 'traffic_cone',
         'vehicle.trailer': 'trailer',
         'vehicle.truck': 'truck'}
-    
+
     inverse_mapping = {}
     for key, value in NameMapping.items():
         inverse_mapping[value] = key
     with open(results_path) as f:
         data = json.load(f)
     results_dict = data['results']
-    
+
     new_results_dict = {}
-    
+
     for key, item in results_dict.items():
         new_item = []
         for _box_dict in item:
             if 'detection_name' in _box_dict:
                 # load detection box
-                score=_box_dict['detection_score']
+                score = _box_dict['detection_score']
                 if score < 0.20:
                     continue
                 new_box = Box(
@@ -628,11 +620,10 @@ def load_results_json(results_path: str = None):
                     token=_box_dict['sample_token'])
                 new_box.track_ind = int(_box_dict['tracking_id'])
             new_item.append(new_box)
-        
+
         new_results_dict[key] = new_item
 
     print('loading total of {} boxes'.format(len(new_results_dict)))
-            
 
     return new_results_dict
 
@@ -644,7 +635,7 @@ def _test():
     samples = nusc.sample
     samples[0]
     lidar_names = ['LIDAR_TOP']
-    cam_names = ['CAM_FRONT',]
+    cam_names = ['CAM_FRONT', ]
     sample_data_token = samples[0]['data'][lidar_names[0]]
     sample_data_token_cam = samples[0]['data'][cam_names[0]]
     anns = nusc.sample_annotation
@@ -656,11 +647,14 @@ def _test():
     nusc_exp.render_sample(samples[0]['token'])
 
 
-def _test_pred(results_path):
+def _test_pred(results_path, vis_out_path):
     results_dict = load_results_json(results_path)
 
-    nusc = NuScenesMars(version='v1.0-trainval', dataroot='/ssd/common_datasets/nuscenes/v1.0')
+    nusc = NuScenesMars(version='v1.0-trainval', dataroot='/data/jwchen/nuscenes/v1.0')
     nusc_exp = NuScenesExplorerMars(nusc)
+    # cams = ['CAM_FRONT_LEFT', 'CAM_FRONT', 'CAM_FRONT_RIGHT',
+    #         'CAM_BACK_RIGHT', 'CAM_BACK', 'CAM_BACK_LEFT']
+    cams = ['CAM_BACK_LEFT']
     # samples = nusc.sample
     # samples[0]
     # lidar_names = ['LIDAR_TOP']
@@ -673,19 +667,38 @@ def _test_pred(results_path):
     print('----------------------')
     # nusc_exp.render_sample_data(sample_data_token_cam)
 
-    selected_keys = list(results_dict.keys())[:3]
-    for sample_token in selected_keys:
-        
+    first_sample = 0
+    stride = 4
+    number_of_samples = 10
+    # selected_keys = list(results_dict.keys())[first_sample:first_sample + number_of_samples]'
+    selected_index = range(first_sample, first_sample+number_of_samples*stride, stride)
+
+    # for sample_token in selected_keys:
+    for i in selected_index:
+        sample_token = list(results_dict.keys())[i]
         selected_sample = nusc.get('sample', sample_token)
+        results_world_coord = copy.deepcopy(results_dict[sample_token])
+        results_world_coord_ = copy.deepcopy(results_dict[sample_token])
 
         selected_lidar_token = selected_sample['data']['LIDAR_TOP']
-        selected_cam_token = selected_sample['data']['CAM_FRONT']
+        nusc_exp.render_sample_pred(selected_lidar_token, results_world_coord,
+                                    out_path=vis_out_path + '%s_LIDAR_TOP_pre' % first_sample,
+                                    verbose=False)
+        nusc_exp.render_sample_data(selected_lidar_token,
+                                    out_path=vis_out_path + '%s_LIDAR_TOP_gt' % first_sample,
+                                    verbose=False)
 
-        nusc_exp.render_sample_pred(selected_lidar_token, results_dict[sample_token])
-        nusc_exp.render_sample_data(selected_lidar_token)
-        nusc_exp.render_sample_pred(selected_cam_token, results_dict[sample_token])
-        nusc_exp.render_sample_data(selected_cam_token)
+        for cam in cams:
+            selected_cam_token = selected_sample['data'][cam]
+            nusc_exp.render_sample_pred(selected_cam_token, results_world_coord_,
+                                        out_path=vis_out_path + '%s_%s_pre' % (first_sample, cam),
+                                        verbose=False)
+            nusc_exp.render_sample_data(selected_cam_token,
+                                        out_path=vis_out_path + '%s_%s_gt' % (first_sample, cam),
+                                        verbose=False)
+        first_sample = first_sample + stride
 
-    
+
 if __name__ == '__main__':
-    _test_pred('/ssd/jwchen/FV3D-based_on_detr3d/json_results/pts_bbox/results_nusc.json')
+    _test_pred('/data1/jwchen/detr3d-main/json_results/pts_bbox/results_nusc.json',
+               '/data1/jwchen/detr3d-main/visual_results/detr-resnet101/')
