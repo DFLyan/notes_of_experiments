@@ -106,7 +106,8 @@ sudo mkdir info
 ```
 
 ### 服务器添加新用户
-```adduser jenny --home /ssd/jenny
+```adduser jenny --home /ssd/jenny```
+```
 sudo vim /etc/sudoers
 # User privilege specification
 root    ALL=(ALL:ALL) ALL
