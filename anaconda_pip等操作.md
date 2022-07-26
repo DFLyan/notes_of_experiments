@@ -12,7 +12,15 @@ conda config --show-sources
 ```
 conda config --remove channels 'https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
 ```
+### 1.1.4 创建环境
+```
+conda create -n 虚拟环境名字 python==3.7 -y
+```
 
+### 1.1.5 删除环境
+```
+conda remove -n 虚拟环境名字 --all
+```
 ## 1.2. conda源
 
 # 2. pip
