@@ -5,7 +5,7 @@ import math
 import os
 import os.path as osp
 import sys
-import time
+import time, shutil
 from datetime import datetime
 from typing import Tuple, List, Iterable
 
@@ -563,6 +563,281 @@ class NuScenesExplorerMars(NuScenesExplorer):
         if verbose:
             plt.show()
 
+    def copy_images(self, sample_data_token: str, dataroot: str,
+                    out_path: str):
+        sd_record = self.nusc.get('sample_data', sample_data_token)
+        shutil.copy(dataroot + sd_record['filename'],
+                    out_path, follow_symlinks=True)
+
+    def render_sample_pred_GT(self,
+                           sample_data_token: str,
+                           boxes: List[Box],
+                           with_anns: bool = True,
+                           box_vis_level: BoxVisibility = BoxVisibility.ANY,
+                           axes_limit: float = 40,
+                           ax: Axes = None,
+                           nsweeps: int = 1,
+                           out_path: str = None,
+                           underlay_map: bool = True,
+                           use_flat_vehicle_coordinates: bool = True,
+                           show_lidarseg: bool = False,
+                           show_lidarseg_legend: bool = False,
+                           filter_lidarseg_labels: List = None,
+                           lidarseg_preds_bin_path: str = None,
+                           verbose: bool = True,
+                           show_panoptic: bool = False,
+                           show_radar_raw_velo: bool = False) -> None:
+        """
+        Render sample data onto axis.
+        :param sample_data_token: Sample_data token.
+        :param with_anns: Whether to draw box annotations.
+        :param box_vis_level: If sample_data is an image, this sets required visibility for boxes.
+        :param axes_limit: Axes limit for lidar and radar (measured in meters).
+        :param ax: Axes onto which to render.
+        :param nsweeps: Number of sweeps for lidar and radar.
+        :param out_path: Optional path to save the rendered figure to disk.
+        :param underlay_map: When set to true, lidar data is plotted onto the map. This can be slow.
+        :param use_flat_vehicle_coordinates: Instead of the current sensor's coordinate frame, use ego frame which is
+            aligned to z-plane in the world. Note: Previously this method did not use flat vehicle coordinates, which
+            can lead to small errors when the vertical axis of the global frame and lidar are not aligned. The new
+            setting is more correct and rotates the plot by ~90 degrees.
+        :param show_lidarseg: When set to True, the lidar data is colored with the segmentation labels. When set
+            to False, the colors of the lidar data represent the distance from the center of the ego vehicle.
+        :param show_lidarseg_legend: Whether to display the legend for the lidarseg labels in the frame.
+        :param filter_lidarseg_labels: Only show lidar points which belong to the given list of classes. If None
+            or the list is empty, all classes will be displayed.
+        :param lidarseg_preds_bin_path: A path to the .bin file which contains the user's lidar segmentation
+                                        predictions for the sample.
+        :param verbose: Whether to display the image after it is rendered.
+        :param show_panoptic: When set to True, the lidar data is colored with the panoptic labels. When set
+            to False, the colors of the lidar data represent the distance from the center of the ego vehicle.
+            If show_lidarseg is True, show_panoptic will be set to False.
+        """
+        # Get sensor modality.
+        sd_record = self.nusc.get('sample_data', sample_data_token)
+        sensor_modality = sd_record['sensor_modality']
+
+        if sensor_modality in ['lidar', 'radar']:
+            sample_rec = self.nusc.get('sample', sd_record['sample_token'])
+            chan = sd_record['channel']
+            ref_chan = 'LIDAR_TOP'
+            ref_sd_token = sample_rec['data'][ref_chan]
+            ref_sd_record = self.nusc.get('sample_data', ref_sd_token)
+
+            if sensor_modality == 'lidar':
+                # Get aggregated lidar point cloud in lidar frame.
+                pc, times = LidarPointCloud.from_file_multisweep(self.nusc, sample_rec, chan, ref_chan,
+                                                                 nsweeps=nsweeps)
+                velocities = None
+            else:
+                # Get aggregated radar point cloud in reference frame.
+                # The point cloud is transformed to the reference frame for visualization purposes.
+                pc, times = RadarPointCloud.from_file_multisweep(self.nusc, sample_rec, chan, ref_chan, nsweeps=nsweeps)
+
+                # Transform radar velocities (x is front, y is left), as these are not transformed when loading the
+                # point cloud.
+                radar_cs_record = self.nusc.get('calibrated_sensor', sd_record['calibrated_sensor_token'])
+                ref_cs_record = self.nusc.get('calibrated_sensor', ref_sd_record['calibrated_sensor_token'])
+                velocities = pc.points[8:10, :]  # Compensated velocity
+                velocities = np.vstack((velocities, np.zeros(pc.points.shape[1])))
+                velocities = np.dot(Quaternion(radar_cs_record['rotation']).rotation_matrix, velocities)
+                velocities = np.dot(Quaternion(ref_cs_record['rotation']).rotation_matrix.T, velocities)
+                velocities[2, :] = np.zeros(pc.points.shape[1])
+
+                if show_radar_raw_velo:
+                    # code for radar velocity without compensated starts below
+                    velocities_ = pc.points[6:8, :]  # Not Compensated velocity
+                    velocities_ = np.vstack((velocities_, np.zeros(pc.points.shape[1])))
+                    velocities_ = np.dot(Quaternion(radar_cs_record['rotation']).rotation_matrix, velocities_)
+                    velocities_ = np.dot(Quaternion(ref_cs_record['rotation']).rotation_matrix.T, velocities_)
+                    velocities_[2, :] = np.zeros(pc.points.shape[1])
+                    # code for radar velocity without compensated end here
+
+            # By default we render the sample_data top down in the sensor frame.
+            # This is slightly inaccurate when rendering the map as the sensor frame may not be perfectly upright.
+            # Using use_flat_vehicle_coordinates we can render the map in the ego frame instead.
+            if use_flat_vehicle_coordinates:
+                # Retrieve transformation matrices for reference point cloud.
+                cs_record = self.nusc.get('calibrated_sensor', ref_sd_record['calibrated_sensor_token'])
+                pose_record = self.nusc.get('ego_pose', ref_sd_record['ego_pose_token'])
+                ref_to_ego = transform_matrix(translation=cs_record['translation'],
+                                              rotation=Quaternion(cs_record["rotation"]))
+
+                # Compute rotation between 3D vehicle pose and "flat" vehicle pose (parallel to global z plane).
+                ego_yaw = Quaternion(pose_record['rotation']).yaw_pitch_roll[0]
+                rotation_vehicle_flat_from_vehicle = np.dot(
+                    Quaternion(scalar=np.cos(ego_yaw / 2), vector=[0, 0, np.sin(ego_yaw / 2)]).rotation_matrix,
+                    Quaternion(pose_record['rotation']).inverse.rotation_matrix)
+                vehicle_flat_from_vehicle = np.eye(4)
+                vehicle_flat_from_vehicle[:3, :3] = rotation_vehicle_flat_from_vehicle
+                viewpoint = np.dot(vehicle_flat_from_vehicle, ref_to_ego)
+            else:
+                viewpoint = np.eye(4)
+
+            # Init axes.
+            if ax is None:
+                _, ax = plt.subplots(1, 1, figsize=(9, 9))
+
+            # Render map if requested.
+            if underlay_map:
+                assert use_flat_vehicle_coordinates, 'Error: underlay_map requires use_flat_vehicle_coordinates, as ' \
+                                                     'otherwise the location does not correspond to the map!'
+                self.render_ego_centric_map(sample_data_token=sample_data_token, axes_limit=axes_limit, ax=ax)
+
+            # Show point cloud.
+            points = view_points(pc.points[:3, :], viewpoint, normalize=False)
+            dists = np.sqrt(np.sum(pc.points[:2, :] ** 2, axis=0))
+            colors = np.minimum(1, dists / axes_limit / np.sqrt(2))
+
+            point_scale = 0.2 if sensor_modality == 'lidar' else 3.0
+            scatter = ax.scatter(points[0, :], points[1, :], c=colors, s=point_scale)
+
+            # Show velocities.
+            if sensor_modality == 'radar':
+                points_vel = view_points(pc.points[:3, :] + velocities, viewpoint, normalize=False)
+                deltas_vel = points_vel - points
+                deltas_vel = 6 * deltas_vel  # Arbitrary scaling
+                max_delta = 20
+                deltas_vel = np.clip(deltas_vel, -max_delta, max_delta)  # Arbitrary clipping
+
+                if show_radar_raw_velo:
+                    # code for radar velocity without compensated starts below
+                    points_vel_ = view_points(pc.points[:3, :] + velocities_, viewpoint, normalize=False)
+                    deltas_vel_ = points_vel_ - points
+                    deltas_vel_ = 6 * deltas_vel_  # Arbitrary scaling
+                    deltas_vel_ = np.clip(deltas_vel_, -max_delta, max_delta)  # Arbitrary clipping
+                    # code for radar velocity without compensated end here
+
+                colors_rgba = scatter.to_rgba(colors)
+                for i in range(points.shape[1]):
+                    ax.arrow(points[0, i], points[1, i], deltas_vel[0, i], deltas_vel[1, i], color=colors_rgba[i])
+
+                    if show_radar_raw_velo:
+                        # code for radar velocity without compensated starts below
+                        ax.arrow(points[0, i], points[1, i], deltas_vel_[0, i], deltas_vel_[1, i], color='pink')
+                        # code for radar velocity without compensated end here
+
+            # Show ego vehicle.
+            ax.plot(0, 0, 'x', color='red')
+
+            # Get boxes of results in lidar frame.
+            _, boxes_pre, _ = self.nusc.get_sample_data_given_boxes(
+                ref_sd_token, boxes, box_vis_level=box_vis_level,
+                use_flat_vehicle_coordinates=use_flat_vehicle_coordinates)
+
+            # Get boxes of GT in lidar frame.
+            _, boxes_GT, _ = self.nusc.get_sample_data(ref_sd_token, box_vis_level=box_vis_level,
+                                                    use_flat_vehicle_coordinates=use_flat_vehicle_coordinates)
+
+            # Show boxes of pre.
+            if with_anns:
+                for i, box_pre in enumerate(boxes_pre):
+                    c = np.array(self.get_color(box_pre.name)) / 255.0 / 2.0
+                    if hasattr(box_pre, 'track_ind'):  # this is true
+                        tr_id = box_pre.track_ind
+                        c = color_mapping[tr_id % len(color_mapping)]
+                    # print(c_box)
+                    # print("original color", np.array(self.get_color(box.name)) / 255.0)
+                    box_pre.render(ax, view=np.eye(4), colors=(c, c, c))
+                    # print(c_box, np.array(self.get_color(box.name)) / 255.0)
+                    ax.arrow(
+                        box_pre.center[0], box_pre.center[1], box_pre.velocity[0], box_pre.velocity[1],
+                        color=c, width=0.25, )
+                        # color='cyan', width=0.25, )
+
+            # Show boxes of GT.
+            if with_anns:
+                for j, box_GT in enumerate(boxes_GT):
+                    c = np.array(self.get_color(box_GT.name)) / 255.0
+                    if hasattr(box_GT, 'track_ind'):  # this is true
+                        tr_id = box_GT.track_ind
+                        c = color_mapping[tr_id % len(color_mapping)]
+                    # print(c_box)
+                    # print("original color", np.array(self.get_color(box.name)) / 255.0)
+                    box_GT.render(ax, view=np.eye(4), colors=(c, c, c))
+                    # print(c_box, np.array(self.get_color(box.name)) / 255.0)
+                    ax.arrow(
+                        box_GT.center[0], box_GT.center[1], box_GT.velocity[0], box_GT.velocity[1],
+                        # color=c, width=0.25, )
+                        color='cyan', width=0.25, )
+
+            # Limit visible range.
+            ax.set_xlim(-axes_limit, axes_limit)
+            ax.set_ylim(-axes_limit, axes_limit)
+        elif sensor_modality == 'camera':
+            # Load boxes and image of results.
+            data_path, boxes_pre, camera_intrinsic = self.nusc.get_sample_data_given_boxes(
+                sample_data_token, boxes, box_vis_level=box_vis_level)
+            # Load boxes and image of GT.
+            data_path, boxes_GT, camera_intrinsic = self.nusc.get_sample_data(sample_data_token,
+                                                                           box_vis_level=box_vis_level)
+            data = Image.open(data_path)
+
+            # Init axes.
+            if ax is None:
+                _, ax = plt.subplots(1, 1, figsize=(9, 16))
+
+            # Show image.
+            ax.imshow(data)
+
+            # Show boxes of pre.
+            if with_anns:
+                for box_pre in boxes_pre:
+                    c = np.array(self.get_color(box_pre.name)) / 255.0 / 2.0
+                    if hasattr(box_pre, 'track_ind'):  # this is true
+                        tr_id = box_pre.track_ind
+                        c = color_mapping[tr_id % len(color_mapping)]
+                    #  if hasattr(box, 'track_ind'): # this is true
+                    box_pre.render(ax, view=camera_intrinsic, normalize=True, colors=(c, c, c))
+                    center = box_pre.center[:, np.newaxis]
+                    velo = box_pre.velocity[:, np.newaxis]
+                    center_cam = view_points(center, camera_intrinsic, normalize=True)[:, 0]
+                    center_add_velo_cam = view_points(center + velo, camera_intrinsic, normalize=True)[:, 0]
+
+                    delta = center_add_velo_cam - center_cam
+                    ax.arrow(
+                        center_cam[0], center_cam[1], delta[0], delta[1],
+                        color=c, width=0.5, )
+                    # color='cyan', width=3.0, )
+
+            # Show boxes of GT.
+            if with_anns:
+                for box_GT in boxes_GT:
+                    c = np.array(self.get_color(box_GT.name)) / 255.0
+                    if hasattr(box_GT, 'track_ind'):  # this is true
+                        tr_id = box_GT.track_ind
+                        c = color_mapping[tr_id % len(color_mapping)]
+                    #  if hasattr(box, 'track_ind'): # this is true
+                    box_GT.render(ax, view=camera_intrinsic, normalize=True, colors=(c, c, c))
+                    center = box_GT.center[:, np.newaxis]
+                    velo = box_GT.velocity[:, np.newaxis]
+                    center_cam = view_points(center, camera_intrinsic, normalize=True)[:, 0]
+                    center_add_velo_cam = view_points(center + velo, camera_intrinsic, normalize=True)[:, 0]
+
+                    delta = center_add_velo_cam - center_cam
+                    ax.arrow(
+                        center_cam[0], center_cam[1], delta[0], delta[1],
+                        color=c, width=0.5, )
+                    # color='cyan', width=3.0, )
+
+            # Limit visible range.
+            ax.set_xlim(0, data.size[0])
+            ax.set_ylim(data.size[1], 0)
+
+        else:
+            raise ValueError("Error: Unknown sensor modality!")
+
+        ax.axis('off')
+        ax.set_title('{} {labels_type} - Pred - GT'.format(
+            sd_record['channel'], labels_type='(predictions)' if lidarseg_preds_bin_path else ''))
+        ax.set_aspect('equal')
+
+        if out_path is not None:
+            plt.savefig(out_path, bbox_inches='tight', pad_inches=0, dpi=200)
+
+        if verbose:
+            plt.show()
+
 
 def load_results_json(results_path: str = None):
     NameMapping = {
@@ -650,15 +925,17 @@ def _test():
 def _test_pred(results_path, vis_out_path):
     results_dict = load_results_json(results_path)
 
-    nusc = NuScenesMars(version='v1.0-trainval', dataroot='/data/jwchen/nuscenes/v1.0')
+    nusc = NuScenesMars(version='v1.0-trainval', dataroot='/ssd/common_datasets/nuscenes/v1.0')
     nusc_exp = NuScenesExplorerMars(nusc)
-    # cams = ['CAM_FRONT_LEFT', 'CAM_FRONT', 'CAM_FRONT_RIGHT',
-    #         'CAM_BACK_RIGHT', 'CAM_BACK', 'CAM_BACK_LEFT']
-    cams = ['CAM_BACK_LEFT']
-    # samples = nusc.sample
+    # TODO: rending lidar in images can use 'for' with all six cameras,
+    #  while rending bboxes in images must use only one camera at a time
+    cams = ['CAM_FRONT_LEFT', 'CAM_FRONT', 'CAM_FRONT_RIGHT',
+            'CAM_BACK_RIGHT', 'CAM_BACK', 'CAM_BACK_LEFT']
+    # cams = ['CAM_FRONT_LEFT']
+    # samples = nusc.samplem
     # samples[0]
     # lidar_names = ['LIDAR_TOP']
-    # cam_names = ['CAM_FRONT',]
+    # cam_names = ['CAM_FRO NT',]
     # sample_data_token = samples[0]['data'][lidar_names[0]]
     # sample_data_token_cam = samples[0]['data'][cam_names[0]]
     # anns = nusc.sample_annotation
@@ -668,37 +945,52 @@ def _test_pred(results_path, vis_out_path):
     # nusc_exp.render_sample_data(sample_data_token_cam)
 
     first_sample = 0
-    stride = 4
-    number_of_samples = 10
-    # selected_keys = list(results_dict.keys())[first_sample:first_sample + number_of_samples]'
+    stride = 1
+    number_of_samples = 6019
+    # selected_keys = list(results_dict.keys())[first_sample:first_sample + number_of_samples]
     selected_index = range(first_sample, first_sample+number_of_samples*stride, stride)
 
     # for sample_token in selected_keys:
-    for i in selected_index:
+    for i in tqdm(selected_index):
         sample_token = list(results_dict.keys())[i]
         selected_sample = nusc.get('sample', sample_token)
-        results_world_coord = copy.deepcopy(results_dict[sample_token])
-        results_world_coord_ = copy.deepcopy(results_dict[sample_token])
+        # results_world_coord = copy.deepcopy(results_dict[sample_token])
+        # results_world_coord_ = copy.deepcopy(results_dict[sample_token])
 
-        selected_lidar_token = selected_sample['data']['LIDAR_TOP']
-        nusc_exp.render_sample_pred(selected_lidar_token, results_world_coord,
-                                    out_path=vis_out_path + '%s_LIDAR_TOP_pre' % first_sample,
-                                    verbose=False)
-        nusc_exp.render_sample_data(selected_lidar_token,
-                                    out_path=vis_out_path + '%s_LIDAR_TOP_gt' % first_sample,
-                                    verbose=False)
+        # lidar BEV
+        # selected_lidar_token = selected_sample['data']['LIDAR_TOP']
+        # nusc_exp.render_sample_pred_GT(selected_lidar_token, results_world_coord,
+        #                             out_path=vis_out_path + '%s_LIDAR_TOP_pre_GT' % first_sample,
+        #                             verbose=False)
+        # nusc_exp.render_sample_pred(selected_lidar_token, results_world_coord,
+        #                             out_path=vis_out_path + '%s_LIDAR_TOP_pre' % first_sample,
+        #                             verbose=False)
+        # nusc_exp.render_sample_data(selected_lidar_token,
+        #                             out_path=vis_out_path + '%s_LIDAR_TOP_gt' % first_sample,
+        #                             verbose=False)
+
+        # lidar in images
+        # for cam in cams:
+        #     nusc.render_pointcloud_in_image(sample_token, pointsensor_channel='LIDAR_TOP', camera_channel=cam,
+        #                                     out_path=vis_out_path + '%s_%s_LIDAR_in_Image_gt' % (first_sample, cam),
+        #                                     verbose=False)
 
         for cam in cams:
             selected_cam_token = selected_sample['data'][cam]
-            nusc_exp.render_sample_pred(selected_cam_token, results_world_coord_,
-                                        out_path=vis_out_path + '%s_%s_pre' % (first_sample, cam),
-                                        verbose=False)
-            nusc_exp.render_sample_data(selected_cam_token,
-                                        out_path=vis_out_path + '%s_%s_gt' % (first_sample, cam),
-                                        verbose=False)
+            nusc_exp.copy_images(selected_cam_token, '/ssd/common_datasets/nuscenes/v1.0/',
+                                 vis_out_path + '%s_%s_original_image.jpg' % (first_sample, cam))
+            # nusc_exp.render_sample_pred_GT(selected_cam_token, results_world_coord_,
+            #                             out_path=vis_out_path + '%s_%s_pre_GT' % (first_sample, cam),
+            #                             verbose=False)
+        #     nusc_exp.render_sample_pred(selected_cam_token, results_world_coord_,
+        #                                 out_path=vis_out_path + '%s_%s_pre' % (first_sample, cam),
+        #                                 verbose=False)
+        #     nusc_exp.render_sample_data(selected_cam_token,
+        #                                 out_path=vis_out_path + '%s_%s_gt' % (first_sample, cam),
+        #                                 verbose=False)
         first_sample = first_sample + stride
 
 
 if __name__ == '__main__':
-    _test_pred('/data1/jwchen/detr3d-main/json_results/pts_bbox/results_nusc.json',
-               '/data1/jwchen/detr3d-main/visual_results/detr-resnet101/')
+    _test_pred('/ssd/jwchen/FV3D-based_on_detr3d/json_results/detr-resnet101/results_nusc.json',
+               '/ssd/jwchen/FV3D-based_on_detr3d/visual_results/detr-resnet101/original/')
