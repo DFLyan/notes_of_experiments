@@ -12,13 +12,13 @@ version = 'v1.0-trainval'
 # version = 'v1.0-mini'
 nusc = NuScenes_modify(version=version, dataroot=dataroot, verbose=True)
 # splits = ['mini_train', 'mini_val']
-splits = ['train']
+splits = ['train', 'val']
 
 
 cams = ['CAM_FRONT_LEFT', 'CAM_FRONT', 'CAM_FRONT_RIGHT',
                      'CAM_BACK_RIGHT', 'CAM_BACK', 'CAM_BACK_LEFT']
 k = 0
-vis_out_path = 'image_label_visual_pair/'
+vis_out_path = 'image_label_bbox_visual_set_2D/'
 
 
 def _split_to_samples(split_logs: List[str]) -> List[str]:
@@ -53,22 +53,26 @@ for split in splits:
     sample_tokens = _split_to_samples(split_logs)
     for sample_token in tqdm.tqdm(sample_tokens):
         sample = nusc.get('sample', sample_token)
-        if k % 20 == 0:
+        if k % 5 == 0:
             for cam in cams:
                 img_data = nusc.get('sample_data', sample['data'][cam])
-                if os.path.exists(vis_out_path + split + '/' + cam + "/%s_label.jpg" % k):
+                if os.path.exists(vis_out_path + split + '/' + cam + "/%s_only_bbox.jpg" % k):
                     continue
 
                 shutil.copy(dataroot + img_data['filename'],
-                            vis_out_path + split + '/' + cam + "/%s.jpg" % k,
+                            vis_out_path + split + '/' + cam + "/%s_img.jpg" % k,
                             follow_symlinks=True)
 
                 # img = cv2.imread(dataroot + img_data['filename'], cv2.IMREAD_COLOR)
                 # cv2.imwrite(vis_out_path + split + '/' + cam + "/%s.jpg" % k, img)
 
                 nusc._render_sample_data(img_data['token'],
-                                        out_path=vis_out_path + split + '/' + cam + "/%s_label.jpg" % k,
-                                        verbose=False)
+                                              out_path=vis_out_path + split + '/' + cam + "/%s_with_2Dlabel.jpg" % k,
+                                              verbose=False)
+
+                # nusc._render_sample_data_bbox(img_data['token'],
+                #                         out_path=vis_out_path + split + '/' + cam + "/%s_only_bbox.jpg" % k,
+                #                         verbose=False)
         k = k + 1
 
 # for i in tqdm.tqdm(range(len(nusc.scene))):
