@@ -218,3 +218,11 @@ sudo mv info/* info_bak/        # 执行完上一步操作后会在新的info文
 sudo rm -rf info                # 把自己新建的info文件夹删掉
 sudo mv info_bak info           # 把以前的info文件夹重新改回名
 ```
+### hash mismatch
+1）删掉/var/lib/apt/lists 这个目录下的东西
+sudo rm -fR /var/lib/apt/lists/*
+2）新建相应文件夹
+sudo mkdir /var/lib/apt/lists/partial
+3）重新update
+sudo apt-get update
+
