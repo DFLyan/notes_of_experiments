@@ -229,3 +229,6 @@ sudo mkdir /var/lib/apt/lists/partial
 3）重新update
 sudo apt-get update
 ```
+
+### 命令打开软件与更新
+sudo software-properties-gtk
