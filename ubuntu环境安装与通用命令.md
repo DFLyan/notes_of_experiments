@@ -219,6 +219,8 @@ sudo rm -rf info                # 把自己新建的info文件夹删掉
 sudo mv info_bak info           # 把以前的info文件夹重新改回名
 ```
 ### hash mismatch
+产生原因：
+所使用的网络供应商，有些会设置一些透明缓存，以增加网络内部速度，减少出口的流量，所获取的某些文件不是源服务器上的真正文件，是从缓存中获取的，当缓存中获取的一些校验信息跟源中不一致的时候，自然提示校验失败，无法继续更新。
 ```
 1）删掉/var/lib/apt/lists 这个目录下的东西
 sudo rm -fR /var/lib/apt/lists/*
