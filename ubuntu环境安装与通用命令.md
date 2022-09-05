@@ -232,3 +232,5 @@ sudo apt-get update
 
 ### 命令打开软件与更新
 sudo software-properties-gtk
+
+### [dpkg报错](https://blog.csdn.net/dou3516/article/details/105120221/)--dpkg: error processing package *** (--configure)
