@@ -234,3 +234,8 @@ sudo apt-get update
 sudo software-properties-gtk
 
 ### [dpkg报错](https://blog.csdn.net/dou3516/article/details/105120221/)--dpkg: error processing package *** (--configure)
+
+### 查看文件夹大小
+```
+du -h --max-depth=1
+```
