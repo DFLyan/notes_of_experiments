@@ -1,3 +1,22 @@
+### docker的默认的安装位置在主文件夹，如果需要修改iamge保存路径，如下进行：
+```
+sudo service docker stop
+sudo vi /lib/systemd/system/docker.service
+```
+修改相关文字：
+```
+ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock --graph="/home/xiaoyuanzi/python/Docker" --storage-driver=overlay
+ExecReload=/bin/kill -s HUP $MAINPID
+```
+保存退出后：
+```
+sudo systemctl daemon-reload
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo systemctl status docker
+sudo docker info
+```
+
 ### 每次都要sudo的解决办法
 1.创建docker组：sudo groupadd docker
 2.将当前用户加入docker组：sudo gpasswd -a ${USER} docker
