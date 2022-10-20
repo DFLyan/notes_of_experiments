@@ -6,7 +6,7 @@
 embed_dims必须是positonal_encoding中num_feats的两倍，不然会报错
 
 ## pipline中RandomScaleImageMultiViewImage
-1. detr3d中的函数，图像和gt都进行了resize，但只有训练时用，这种情况下，原作者提供的函数，测试时不能使用，只能测试原图像分辨率；
+1. detr3d中的函数，图像和gt都进行了resize，但只有训练时用，这种情况下，原作者提供的函数，测试时不能使用，只能测试原图像分辨率，如果要用，得添加个参数，让测试时不对gt进行resize；
 
 2. 在bevformer中，并未对gt进行resize，训练和测试都用resize；
 
