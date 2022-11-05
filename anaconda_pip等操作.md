@@ -21,6 +21,11 @@ conda create -n 虚拟环境名字 python==3.7 -y
 ```
 conda remove -n 虚拟环境名字 --all
 ```
+
+### 1.1.6 更新基础conda环境
+```
+conda update -n base -c defaults conda
+```
 ## 1.2. conda源
 
 # 2. pip
