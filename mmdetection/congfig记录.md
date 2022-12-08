@@ -15,3 +15,6 @@ embed_dims必须是positonal_encoding中num_feats的两倍，不然会报错
 个人理解：如果训练时同时resize输入和输出，那么测试时可以不用resize函数，视为学习一一对应关系，即情况1；如果训练时只resize输入，那么，测试时也可以只resize输入，这样可能结果对尺度更鲁棒。不过究竟哪种更合理，还有待探讨。
 
 总结：测试的时候都是要输出物体的属性，所以不能缩放gt。关键就在于训练时需不需要缩放GT。
+
+## resnet参数
+当为resnet18和34时，使用basicblock，就不能使用dcn了。
