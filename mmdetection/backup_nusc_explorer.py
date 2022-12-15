@@ -104,11 +104,13 @@ class NuScenesMars(NuScenes):
                 # Move box to ego vehicle coord system.
                 box.translate(-np.array(pose_record['translation']))
                 box.rotate(Quaternion(pose_record['rotation']).inverse)
+                
+                box.center[2] += 0.5*box.wlh[2] ## for bevdepth
 
                 #  Move box to sensor coord system.
                 box.translate(-np.array(cs_record['translation']))
                 box.rotate(Quaternion(cs_record['rotation']).inverse)
-
+                
             if sensor_record['modality'] == 'camera' and not \
                     box_in_image(box, cam_intrinsic, imsize, vis_level=box_vis_level):
                 continue
