@@ -30,6 +30,9 @@ conda update -n base -c defaults conda
 
 # 2. pip
 ## 2.1 常用操作
+### 2.1.1 超时
+--default-timeout=100
+
 ## 2.2 pip源
 ### https://pypi.tuna.tsinghua.edu.cn/simple (清华)
 ### https://repo.huaweicloud.com/repository/pypi/simple (华为)
