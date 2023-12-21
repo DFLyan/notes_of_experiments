@@ -1,6 +1,6 @@
 downsample = 16
 se = box_2d_mask_aug[4]
-B, N, H, W = se.shape
+H, W = se.shape
 se_down = se.view(H // downsample, downsample,
             W // downsample, downsample, 1)
 se_down = se_down.permute(0, 2, 4, 1, 3).contiguous()
