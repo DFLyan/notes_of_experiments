@@ -42,7 +42,7 @@ docker run --shm-size=32g -it -v /data1/jwchen/mmdetection3d/data:/mmdetection3d
 暂时的方法是mmdet3d/datasets/nuscenses_mono_datasets里的类初始化直接修改version为v1.0-mini，在83行
 
 
-## cofig的一些说明
+## config的一些说明
 ### 输出所有参数
 ```
 python tools/misc/print_config.py config_file
@@ -135,3 +135,7 @@ if __name__ == '__main__':
     torch.multiprocessing.set_start_method('fork')  ###加这一行
     main()
 ```
+
+# 代码的一些bug
+### projects下的一些文件import报错"no module named **"
+在import前面加..，使用相对路径
