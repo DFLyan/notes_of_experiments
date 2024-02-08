@@ -257,3 +257,7 @@ cp -rp 源目录/* 合并目录/
 ```
 for tar in *.tar;do tar xvf $tar;done
 ```
+### g++/gcc版本更改
+```
+update-alternatives --config g++
+```
