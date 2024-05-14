@@ -104,13 +104,14 @@ class NuScenesMars(NuScenes):
                 # Move box to ego vehicle coord system.
                 box.translate(-np.array(pose_record['translation']))
                 box.rotate(Quaternion(pose_record['rotation']).inverse)
-                
-                box.center[2] += 0.5*box.wlh[2] ## for bevdepth
+
+                # for bevdepth
+                box.center[2] += 0.5 * box.wlh[2]
 
                 #  Move box to sensor coord system.
                 box.translate(-np.array(cs_record['translation']))
                 box.rotate(Quaternion(cs_record['rotation']).inverse)
-                
+
             if sensor_record['modality'] == 'camera' and not \
                     box_in_image(box, cam_intrinsic, imsize, vis_level=box_vis_level):
                 continue
@@ -130,7 +131,7 @@ class NuScenesExplorerMars(NuScenesExplorer):
                            sample_data_token: str,
                            with_anns: bool = True,
                            box_vis_level: BoxVisibility = BoxVisibility.ANY,
-                           axes_limit: float = 40,
+                           axes_limit: float = 60,
                            ax: Axes = None,
                            nsweeps: int = 1,
                            out_path: str = None,
@@ -343,7 +344,7 @@ class NuScenesExplorerMars(NuScenesExplorer):
                            boxes: List[Box],
                            with_anns: bool = True,
                            box_vis_level: BoxVisibility = BoxVisibility.ANY,
-                           axes_limit: float = 40,
+                           axes_limit: float = 60,
                            ax: Axes = None,
                            nsweeps: int = 1,
                            out_path: str = None,
@@ -576,7 +577,7 @@ class NuScenesExplorerMars(NuScenesExplorer):
                            boxes: List[Box],
                            with_anns: bool = True,
                            box_vis_level: BoxVisibility = BoxVisibility.ANY,
-                           axes_limit: float = 40,
+                           axes_limit: float = 60,
                            ax: Axes = None,
                            nsweeps: int = 1,
                            out_path: str = None,
@@ -925,6 +926,10 @@ def _test():
 
 
 def _test_pred(results_path, vis_out_path):
+    # token_list = np.load('bevdepth_token_need_shown.npy')
+    # map = np.load('bevdepth_map.npy')
+    if not os.path.exists(vis_out_path):
+        os.mkdir(vis_out_path)
     results_dict = load_results_json(results_path)
 
     nusc = NuScenesMars(version='v1.0-trainval', dataroot='/ssd/common_datasets/nuscenes/v1.0')
@@ -947,52 +952,67 @@ def _test_pred(results_path, vis_out_path):
     # nusc_exp.render_sample_data(sample_data_token_cam)
 
     first_sample = 0
-    stride = 1
-    number_of_samples = 6019
+    stride = 10
+    number_of_samples = 100
     # selected_keys = list(results_dict.keys())[first_sample:first_sample + number_of_samples]
     selected_index = range(first_sample, first_sample+number_of_samples*stride, stride)
+    # token_list_need_shown = ['6bdd8aca8e1142eca705815657551092', 'efd5303be8db46169c61670a5f16af2e',
+    #                          '6ca201edb2ec4a49aa6dee2502640f30', '2bdb1731909b44278640890b57f92c48',
+    #                          '4ffbb8951b9841429bfd3aee39c6a2be', '60321e7996b64926bfb9afd9c53b4170',
+    #                          'c0f6cef97fa44973afe8ed8e18e652c3']
 
     # for sample_token in selected_keys:
     for i in tqdm(selected_index):
+    # for i, sample_token in tqdm(enumerate(token_list[:500])):
+    # for i, sample_token in tqdm(enumerate(token_list_need_shown)):
         sample_token = list(results_dict.keys())[i]
         selected_sample = nusc.get('sample', sample_token)
-        # results_world_coord = copy.deepcopy(results_dict[sample_token])
+        results_world_coord = copy.deepcopy(results_dict[sample_token])
         # results_world_coord_ = copy.deepcopy(results_dict[sample_token])
 
         # lidar BEV
-        # selected_lidar_token = selected_sample['data']['LIDAR_TOP']
+        selected_lidar_token = selected_sample['data']['LIDAR_TOP']
         # nusc_exp.render_sample_pred_GT(selected_lidar_token, results_world_coord,
-        #                             out_path=vis_out_path + '%s_LIDAR_TOP_pre_GT' % first_sample,
+        #                             out_path=vis_out_path + '/%s_LIDAR_TOP_pre_GT.jpg' % (sample_token),
         #                             verbose=False)
+        nusc_exp.render_sample_pred_GT(selected_lidar_token, results_world_coord,
+                                       out_path=vis_out_path + '/%s_LIDAR_TOP_pre.jpg' % first_sample,
+                                       verbose=False)
         # nusc_exp.render_sample_pred(selected_lidar_token, results_world_coord,
-        #                             out_path=vis_out_path + '%s_LIDAR_TOP_pre' % first_sample,
+        #                             out_path=vis_out_path + '/%s_LIDAR_TOP_pre' % first_sample,
         #                             verbose=False)
         # nusc_exp.render_sample_data(selected_lidar_token,
-        #                             out_path=vis_out_path + '%s_LIDAR_TOP_gt' % first_sample,
+        #                             out_path=vis_out_path + '/%s_LIDAR_TOP_gt' % first_sample,
         #                             verbose=False)
 
         # lidar in images
         # for cam in cams:
         #     nusc.render_pointcloud_in_image(sample_token, pointsensor_channel='LIDAR_TOP', camera_channel=cam,
-        #                                     out_path=vis_out_path + '%s_%s_LIDAR_in_Image_gt' % (first_sample, cam),
+        #                                     out_path=vis_out_path + '/%s_%s_LIDAR_in_Image_gt' % (first_sample, cam),
         #                                     verbose=False)
 
         for cam in cams:
+            results_world_coord_ = copy.deepcopy(results_dict[sample_token])
             selected_cam_token = selected_sample['data'][cam]
             nusc_exp.copy_images(selected_cam_token, '/ssd/common_datasets/nuscenes/v1.0/',
-                                 vis_out_path + '%s_%s_original_image.jpg' % (first_sample, cam))
+                                 vis_out_path + '/%s_%s_%s_original_image.jpg' % (first_sample, selected_sample['token'], cam))
+            nusc_exp.render_sample_pred_GT(selected_cam_token, results_world_coord_,
+                                        out_path=vis_out_path + '/%s_%s_%s_pre_GT.jpg' % (first_sample, selected_sample['token'], cam),
+                                        verbose=False)
+            # nusc_exp.copy_images(selected_cam_token, '/ssd/common_datasets/nuscenes/v1.0/',
+            #                      vis_out_path + '/%s_%s_original_image.jpg' % (sample_token, cam))
             # nusc_exp.render_sample_pred_GT(selected_cam_token, results_world_coord_,
-            #                             out_path=vis_out_path + '%s_%s_pre_GT' % (first_sample, cam),
-            #                             verbose=False)
+            #                                out_path=vis_out_path + '/%s_%s_pre_GT.jpg' % (sample_token, cam),
+            #                                verbose=False)
         #     nusc_exp.render_sample_pred(selected_cam_token, results_world_coord_,
-        #                                 out_path=vis_out_path + '%s_%s_pre' % (first_sample, cam),
+        #                                 out_path=vis_out_path + '/%s_%s_pre' % (first_sample, cam),
         #                                 verbose=False)
         #     nusc_exp.render_sample_data(selected_cam_token,
-        #                                 out_path=vis_out_path + '%s_%s_gt' % (first_sample, cam),
+        #                                 out_path=vis_out_path + '/%s_%s_gt' % (first_sample, cam),
         #                                 verbose=False)
         first_sample = first_sample + stride
 
 
 if __name__ == '__main__':
-    _test_pred('/ssd/jwchen/FV3D-based_on_detr3d/json_results/detr-resnet101/results_nusc.json',
-               '/ssd/jwchen/FV3D-based_on_detr3d/visual_results/detr-resnet101/original/')
+    _test_pred('/ssd/jwchen/BEVDepthV2/outputs/twodsup_70_50e_res18_b6_gpu8/results_nusc.json',
+               '/ssd/jwchen/BEVDepthV2/visual_results/twodsup_70_50e_res18_b6_gpu8')
