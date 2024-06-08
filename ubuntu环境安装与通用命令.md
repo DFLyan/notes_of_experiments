@@ -259,5 +259,11 @@ for tar in *.tar;do tar xvf $tar;done
 ```
 ### g++/gcc版本更改
 ```
-update-alternatives --config g++
+安装
+sudo apt install gcc-9
+
+添加进可选择列表
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90
+
+update-alternatives --config gcc
 ```
