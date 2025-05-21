@@ -7,9 +7,6 @@ sudo rm /var/cache/apt/archives/lock
 sudo rm /var/lib/dpkg/lock
 ```
 
-### Anaconda安装
-bash A...sh
-
 ### pip安装
 sudo apt-get install python-pip python-dev
 
@@ -24,8 +21,6 @@ sudo apt-get update && sudo apt-get install bazel
 sudo apt-get upgrade bazel
 ```
 
-### cuda安装
-sudo sh cuda_....
 
 ### 配置cuda路径
 ```
@@ -266,4 +261,13 @@ sudo apt install gcc-9
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90
 
 update-alternatives --config gcc
+```
+
+### apt没有公钥
+W: GPG 错误：https://dl.google.com/linux/chrome/deb stable InRelease: 由于没有公钥，无法验证下列签名： NO_PUBKEY 32EE5355A6BC6E42
+E: 仓库 “https://dl.google.com/linux/chrome/deb stable InRelease” 没有数字签名。
+N: 无法安全地用该源进行更新，所以默认禁用该源。
+N: 参见 apt-secure(8) 手册以了解仓库创建和用户配置方面的细节。
+```
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 32EE5355A6BC6E42
 ```
